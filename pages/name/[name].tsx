@@ -113,7 +113,7 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
         paths: pokemonNames.map(name => ({     // 1º obtenemos los paths que nos generan unos names
             params: { name }                   // Este names se redefinen como params que pasarán 
         })),                                   // a las getStaticProps cuando sea llamado en el url
-        fallback: false                         
+        fallback: 'blocking'                      
     }
 }
 
@@ -129,11 +129,22 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     //     sprites: data.sprites,
     // }
 
+    const pokemon = await getPokemonInfo( name );
+
+    if (!pokemon) {                     // Si no existe el id
+        return {
+            redirect: {                  // redirección al home
+                destination: '/',
+                permanent: false
+            }
+        }
+    }
+
     return {
         props: {
             //pokemon: data // Esta data contiene la info que usaremos en la página
         
-            pokemon: await getPokemonInfo( name )
+            pokemon
         }
     }
 }

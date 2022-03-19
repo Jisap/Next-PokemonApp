@@ -114,7 +114,8 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
         paths: pokemons151.map( id => ({    // 1º obtenemos los paths que nos generan un ids 
             params:{ id }                   // Estos ids se redefinen como params que pasarán 
         })),                                // a las getStaticProps cuando sea llamados en el url
-        fallback: false
+        //fallback: false
+        fallback: 'blocking'                // Aunque no exista el id se dejara pasar.
     }
 }
 
@@ -123,19 +124,31 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     const { id } = params as { id: string };    // Recibimos el id desde los params del url
 
     // const { data } = await pokeApi.get<Pokemon>(`/pokemon/${ id }`) // y lo usamos para obtener la data del pokemon 
-
+    
     // const pokemon = {               // De la data solo usaremos el id, el name y los sprites
     //     id: data.id,
     //     name: data.name,
     //     sprites: data.sprites,
     // }
+    
+    const pokemon = await getPokemonInfo( id );
 
+    if( !pokemon ){                     // Si no existe el id
+        return{
+            redirect:{                  // redirección al home
+                destination: '/',
+                permanent: false
+            }
+        }
+    }
+    
     return {
         props: {
             //pokemon: data // Esta data contiene la info que usaremos en la página
 
-            pokemon: await getPokemonInfo( id )
-        }
+            pokemon
+        }, 
+        revalidate: 86400,  // Cada 24 horas se actualizará el build de producción
     }
 }
 
